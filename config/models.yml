@@ -1,0 +1,25 @@
+
+# models.yml - AI Model Configuration
+models:
+  primary:
+    summary: "gemini-1.5-flash"
+    reasoning: "gemini-1.5-flash"
+    fallback: "gemini-1.5-flash"
+  
+  embedding:
+    model: "sentence-transformers/all-MiniLM-L6-v2"
+    dimension: 384
+  
+  settings:
+    max_text_chars: 120000
+    temperature: 0.2
+    max_output_tokens: 2048
+    retry_attempts: 3
+    timeout: 30
+
+cache:
+  enabled: true
+  ttl: 3600  # 1 hour
+  max_size: 1000
+
+---

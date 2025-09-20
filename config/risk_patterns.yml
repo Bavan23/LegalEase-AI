@@ -1,0 +1,120 @@
+
+# risk_patterns.yml - Enhanced Risk Detection Patterns
+risk_patterns:
+  RED:
+    auto_renewal_trap:
+      pattern: "(auto(?:matic)?ally?\\s*renew|renew unless|rolls over|unless (?:notice|terminated))"
+      description: "Automatic renewal without clear notice requirements"
+      severity: 9
+    
+    heavy_penalties:
+      pattern: "(penalt(y|ies)|liquidated damages|fine of|charge.*₹|fee of.*₹)"
+      description: "Excessive penalties or liquidated damages"
+      severity: 8
+    
+    unilateral_changes:
+      pattern: "(may (?:modify|change|amend) (?:at any time|without notice)|sole discretion|unilateral)"
+      description: "One-sided modification rights"
+      severity: 9
+    
+    immediate_termination:
+      pattern: "(terminate immediately|without notice|forthwith|instant termination)"
+      description: "Immediate termination clauses"
+      severity: 8
+    
+    uncapped_liability:
+      pattern: "(no (?:limit|cap) on liability|unlimited liability|entire amount)"
+      description: "Unlimited liability exposure"
+      severity: 10
+    
+    hidden_charges:
+      pattern: "(additional charges|extra fee|supplementary|incidental charges)"
+      description: "Potential hidden or additional charges"
+      severity: 7
+
+  YELLOW:
+    notice_requirements:
+      pattern: "(notice period|(?:\\d+)\\s*days?\\s*notice|prior notice|advance notice)"
+      description: "Notice period requirements"
+      severity: 5
+    
+    standard_penalties:
+      pattern: "(late fee|interest|charge|penalty.*reasonable)"
+      description: "Standard penalty clauses"
+      severity: 4
+    
+    termination_clauses:
+      pattern: "(termination|terminate on|end of term|expire)"
+      description: "Termination conditions"
+      severity: 4
+    
+    payment_terms:
+      pattern: "(due date|payment.*within|pay.*days|monthly|quarterly)"
+      description: "Payment obligations and deadlines"
+      severity: 5
+    
+    obligations:
+      pattern: "(shall.*provide|must.*deliver|required to|responsible for)"
+      description: "Mandatory obligations"
+      severity: 5
+    
+    renewal_terms:
+      pattern: "(renewal|extend|continue for)"
+      description: "Contract renewal provisions"
+      severity: 4
+
+  GREEN:
+    definitions:
+      pattern: "(means|defined as|refers to|includes|definition)"
+      description: "Definitional clauses"
+      severity: 1
+    
+    parties_info:
+      pattern: "(party|parties|between|hereby|whereas)"
+      description: "Party identification"
+      severity: 1
+    
+    standard_terms:
+      pattern: "(good faith|reasonable|customary|standard|normal)"
+      description: "Standard commercial terms"
+      severity: 2
+    
+    mutual_benefits:
+      pattern: "(mutual|both parties|jointly|cooperation)"
+      description: "Mutual benefit provisions"
+      severity: 2
+    
+    rights_granted:
+      pattern: "(entitled to|right to|may.*benefit|privilege)"
+      description: "Rights and privileges"
+      severity: 2
+
+# Indian legal compliance patterns
+indian_law_checks:
+  rent_control:
+    pattern: "(notice.*(?:1[0-5]|[1-9])\\s*days|vacate.*(?:1[0-5]|[1-9])\\s*days)"
+    warning: "Indian Rent Control Acts typically require 30+ days notice"
+    applicable_states: ["Maharashtra", "Delhi", "West Bengal", "Karnataka"]
+  
+  interest_rates:
+    pattern: "interest.*(?:2[4-9]|[3-9]\\d|\\d{3,})%"
+    warning: "Interest rate seems high. RBI guidelines suggest checking legal limits"
+    max_rate: 24
+  
+  working_hours:
+    pattern: "work.*(?:1[0-9]|[2-9]\\d)\\s*hours"
+    warning: "Factories Act limits working hours. Check labour law compliance"
+    max_hours_per_week: 48
+  
+  security_deposit:
+    pattern: "deposit.*(?:[3-9]|[1-9]\\d)\\s*(?:months|month)"
+    warning: "Security deposit >2-3 months may violate local tenancy laws"
+    max_months: 3
+  
+  consumer_protection:
+    pattern: "(no refund|non-refundable|final sale)"
+    warning: "Consumer Protection Act 2019 provides certain refund rights"
+    
+  contract_labour:
+    pattern: "(contract worker|temporary employee|casual labour)"
+    warning: "Contract Labour Act compliance required for certain arrangements"

@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {{ "LegalEase AI" }}
+    </title>
+     <link rel="icon" type="image/png" href="{{ url_for('static', path='logo.jpg') }}">
+
+    <meta
+      name="description"
+      content="Demystify complex legal documents with AI-powered analysis, risk assessment, and multilingual explanations."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+    <!-- CSS Framework -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Vue.js 3 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.0/axios.min.js"></script>
+
+    <style>
+     body {
+    font-family: "Merriweather Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400; /* normal */
+    font-style: normal;
+  }
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .loading-spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 2s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .risk-red {
+        background-color: #fef2f2;
+        border-color: #ef4444;
+        color: #dc2626;
+      }
+      .risk-yellow {
+        background-color: #fefce8;
+        border-color: #eab308;
+        color: #a16207;
+      }
+      .risk-green {
+        background-color: #f0fdf4;
+        border-color: #22c55e;
+        color: #15803d;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <div id="app">
+      <!-- Navigation -->
+      <nav class="bg-black shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex items-center">
+              <img src="/static/logo.jpg" alt="LegalEase AI Logo" class="w-8 h-8 mr-3" />
+              <h1 class="text-white text-xl font-bold">
+                LegalEase AI
+              </h1>
+            </div>
+            <div class="flex items-center space-x-4">
+              <button
+                @click="showHelp = !showHelp"
+                class="text-white hover:text-gray-200"
+              >
+                <i class="fas fa-question-circle"></i> Help
+              </button>
+              <div class="relative">
+                <select
+                  v-model="selectedLanguage"
+                  class="bg-white rounded px-3 py-1 text-sm"
+                >
+                  <option value="english">🇺🇸 English</option>
+                  <option value="hindi">🇮🇳 हिंदी</option>
+                  <option value="tamil">🇮🇳 தமிழ்</option>
+                  <option value="telugu">🇮🇳 తెలుగు</option>
+                  <option value="bengali">🇮🇳 বাংলা</option>
+                  <option value="gujarati">🇮🇳 ગુજરાતી</option>
+                  <option value="marathi">🇮🇳 मराठी</option>
+                  <option value="kannada">🇮🇳 ಕನ್ನಡ</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Section -->
+        <div v-if="!sessionId" class="text-center mb-12">
+          <h2 class="text-4xl font-bold text-gray-900 mb-4">
+            Demystify Legal Documents with AI
+          </h2>
+          <p class="text-xl text-gray-600 mb-8">
+            Upload your legal documents and get instant analysis with risk
+            assessment, plain-language explanations, and multilingual support.
+          </p>
+
+          <!-- Features Grid -->
+          <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <div
+              v-for="feature in features"
+              :key="feature.icon"
+              class="bg-white p-6 rounded-lg shadow-md card-hover"
+            >
+              <i :class="feature.icon" class="text-3xl text-black-600 mb-4"></i>
+              <h3 class="text-lg font-semibold mb-2">
+                {{ "{{" }} feature.title {{ "}}" }}
+              </h3>
+              <p class="text-gray-600">
+                {{ "{{" }} feature.description {{ "}}" }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div v-if="!sessionId" class="bg-white rounded-lg shadow-lg p-8 mb-8">
+          <h3 class="text-2xl font-bold text-gray-900 mb-6">
+            Upload Your Document
+          </h3>
+
+          <!-- Privacy Mode Selection -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Privacy Mode</label
+            >
+            <div class="flex space-x-4">
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  v-model="privacyMode"
+                  value="standard"
+                  class="mr-2"
+                />
+                <span>Standard (Basic redaction)</span>
+              </label>
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  v-model="privacyMode"
+                  value="high"
+                  class="mr-2"
+                />
+                <span>High Privacy (Aggressive redaction)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- File Upload -->
+          <div
+            class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
+          >
+            <input
+              ref="fileInput"
+              type="file"
+              @change="handleFileSelect"
+              accept=".pdf"
+              class="hidden"
+            />
+            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+            <p class="text-lg mb-2">Drop your PDF here or click to browse</p>
+            <p class="text-sm text-gray-500 mb-4">Maximum file size: 25MB</p>
+            <button
+              @click="$refs.fileInput.click()"
+              class="bg-black text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Choose File
+            </button>
+          </div>
+
+          <!-- Selected File -->
+          <div v-if="selectedFile" class="mt-4 p-4 bg-gray-100 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <i class="fas fa-file-pdf text-red-600 mr-2"></i>
+                <span>{{ "{{" }} selectedFile.name {{ "}}" }}</span>
+                <span class="text-sm text-gray-500 ml-2">
+                  ({{ "{{" }} formatFileSize(selectedFile.size) {{ "}}" }})
+                </span>
+              </div>
+              <button
+                @click="uploadDocument"
+                :disabled="uploading"
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+              >
+                <i v-if="uploading" class="fas fa-spinner fa-spin mr-2"></i>
+                <span v-if="uploading">Processing...</span>
+                <span v-else>Analyze Document</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analysis Results -->
+        <div v-if="sessionId && analysisResults">
+          <!-- Risk Summary Dashboard -->
+          <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-2xl font-bold mb-6">Document Risk Assessment</h3>
+
+            <div class="grid md:grid-cols-4 gap-6 mb-6">
+              <!-- Overall Status -->
+              <div class="text-center">
+                <div class="text-3xl mb-2">
+                  {{ "{{" }} analysisResults.risk_summary.overall_status {{ "}}"
+                  }}
+                </div>
+                <p class="text-sm text-gray-600">Overall Status</p>
+              </div>
+
+              <!-- Risk Breakdown -->
+              <div class="text-center">
+                <div class="text-2xl text-red-600 font-bold">
+                  {{ "{{" }} getRiskCount('RED') {{ "}}" }}
+                </div>
+                <p class="text-sm text-gray-600">🚨 High Risk</p>
+              </div>
+
+              <div class="text-center">
+                <div class="text-2xl text-yellow-600 font-bold">
+                  {{ "{{" }} getRiskCount('YELLOW') {{ "}}" }}
+                </div>
+                <p class="text-sm text-gray-600">⚠️ Medium Risk</p>
+              </div>
+
+              <div class="text-center">
+                <div class="text-2xl text-green-600 font-bold">
+                  {{ "{{" }} getRiskCount('GREEN') {{ "}}" }}
+                </div>
+                <p class="text-sm text-gray-600">✅ Low Risk</p>
+              </div>
+            </div>
+
+            <!-- Risk Score -->
+            <div class="mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium">Risk Score</span>
+                <span class="text-sm text-gray-600">
+                  {{ "{{" }} getRiskScore() {{ "}}" }}/10
+                </span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  class="bg-gradient-to-r from-green-400 to-red-600 h-2 rounded-full"
+                  :style="{width: (getRiskScore() * 10) + '%'}"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Recommendation -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+              <p class="text-blue-700">
+                <i class="fas fa-lightbulb mr-2"></i>
+                {{ "{{" }} analysisResults.risk_summary.recommendation {{ "}}"
+                }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Tabs -->
+          <div class="bg-white rounded-lg shadow-lg">
+            <div class="border-b border-gray-200">
+              <nav class="flex space-x-8 px-6">
+                <button
+                  v-for="tab in tabs"
+                  :key="tab.id"
+                  @click="activeTab = tab.id"
+                  :class="[activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']"
+                  class="py-4 px-1 border-b-2 font-medium text-sm"
+                >
+                  <i :class="tab.icon" class="mr-2"></i>
+                  {{ "{{" }} tab.name {{ "}}" }}
+                </button>
+              </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+              <!-- Summary Tab -->
+              <div v-if="activeTab === 'summary'">
+                <h4 class="text-lg font-semibold mb-4">AI-Generated Summary</h4>
+                <div class="prose max-w-none">
+                  <div
+                    v-html="formatSummary(analysisResults.auto_summary)"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Risk Radar Tab -->
+              <div v-if="activeTab === 'radar'">
+                <h4 class="text-lg font-semibold mb-4">
+                  Risk Radar - Clause-by-Clause Analysis
+                </h4>
+                <button
+                  @click="loadRiskRadar"
+                  class="bg-blue-600 text-white px-4 py-2 rounded mb-4"
+                >
+                  <i class="fas fa-search mr-2"></i>
+                  Load Risk Radar
+                </button>
+
+                <div v-if="riskRadarData" class="space-y-4">
+                  <div
+                    v-for="item in riskRadarData.risk_items"
+                    :key="item.clause_id"
+                    :class="getRiskCardClass(item.risk_level)"
+                    class="border-l-4 p-4 rounded"
+                  >
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <h5 class="font-semibold">
+                          {{ "{{" }} item.heading {{ "}}" }}
+                        </h5>
+                        <p class="text-sm text-gray-600">
+                          {{ "{{" }} item.clause_id {{ "}}" }} (Page {{ "{{" }}
+                          item.page {{ "}}" }})
+                        </p>
+                        <div
+                          v-if="item.risk_factors && item.risk_factors.length"
+                          class="mt-2"
+                        >
+                          <p class="text-sm font-medium">Risk Factors:</p>
+                          <ul class="text-sm list-disc list-inside">
+                            <li
+                              v-for="factor in item.risk_factors"
+                              :key="factor"
+                            >
+                              {{ "{{" }} factor {{ "}}" }}
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <span class="text-lg"
+                          >{{ "{{" }} getRiskIcon(item.risk_level) {{ "}}"
+                          }}</span
+                        >
+                        <p class="text-sm">
+                          {{ "{{" }} item.risk_level {{ "}}" }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Clause Explorer Tab -->
+              <div v-if="activeTab === 'clauses'">
+                <div class="flex justify-between items-center mb-4">
+                  <h4 class="text-lg font-semibold">Clause Explorer</h4>
+                  <button
+                    @click="loadClauses"
+                    class="bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Load Clauses
+                  </button>
+                </div>
+
+                <div v-if="clauses" class="space-y-4">
+                  <div
+                    v-for="clause in clauses"
+                    :key="clause.id"
+                    class="border border-gray-200 rounded-lg p-4"
+                  >
+                    <div class="flex justify-between items-start mb-2">
+                      <h5 class="font-semibold">
+                        {{ "{{" }} clause.heading || clause.id {{ "}}" }}
+                      </h5>
+                      <span
+                        :class="getRiskBadgeClass(clause.risk_result && clause.risk_result.level)"
+                        class="px-2 py-1 rounded text-xs font-medium"
+                      >
+                        {{ "{{" }} getRiskIcon(clause.risk_result &&
+                        clause.risk_result.level) {{ "}}" }} {{ "{{" }}
+                        clause.risk_result && clause.risk_result.level {{ "}}"
+                        }}
+                      </span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">
+                      {{ "{{" }} clause.text.substring(0, 200) {{ "}}" }}...
+                    </p>
+                    <div class="flex space-x-2">
+                      <button
+                        @click="explainClause(clause.id)"
+                        class="bg-green-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        <i class="fas fa-lightbulb mr-1"></i>
+                        Explain
+                      </button>
+                      <button
+                        @click="explainClause(clause.id, true)"
+                        class="bg-purple-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        <i class="fas fa-book mr-1"></i>
+                        Story Mode
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Q&A Tab -->
+              <div v-if="activeTab === 'qa'">
+                <h4 class="text-lg font-semibold mb-4">
+                  Ask Questions About Your Document
+                </h4>
+
+                <div class="mb-6">
+                  <div class="flex space-x-2">
+                    <input
+                      v-model="currentQuestion"
+                      @keyup.enter="askQuestion"
+                      placeholder="Ask anything about your document..."
+                      class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      @click="askQuestion"
+                      :disabled="!currentQuestion.trim()"
+                      class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      <i class="fas fa-paper-plane mr-2"></i>
+                      Ask
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Q&A History -->
+                <div v-if="qaHistory.length" class="space-y-4">
+                  <div
+                    v-for="qa in qaHistory"
+                    :key="qa.id"
+                    class="border border-gray-200 rounded-lg p-4"
+                  >
+                    <div class="mb-2">
+                      <strong class="text-blue-600">Q:</strong> {{ "{{" }}
+                      qa.question {{ "}}" }}
+                    </div>
+                    <div class="mb-2">
+                      <strong class="text-green-600">A:</strong>
+                      <div v-html="formatAnswer(qa.answer)"></div>
+                    </div>
+                    <div
+                      v-if="qa.sources && qa.sources.length"
+                      class="text-sm text-gray-600"
+                    >
+                      <strong>Sources:</strong>
+                      <span
+                        v-for="(source, index) in qa.sources"
+                        :key="source.clause_id"
+                      >
+                        {{ "{{" }} source.clause_id {{ "}}" }}{{ "{{" }} index <
+                        qa.sources.length - 1 ? ', ' : '' {{ "}}" }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Compare Tab -->
+              <div v-if="activeTab === 'compare'">
+                <h4 class="text-lg font-semibold mb-4">Compare Documents</h4>
+                <p class="text-gray-600 mb-4">
+                  Upload another document to compare with the current one.
+                </p>
+
+                <div
+                  class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center"
+                >
+                  <input
+                    ref="compareFileInput"
+                    type="file"
+                    @change="handleCompareFileSelect"
+                    accept=".pdf"
+                    class="hidden"
+                  />
+                  <i
+                    class="fas fa-exchange-alt text-3xl text-gray-400 mb-3"
+                  ></i>
+                  <p class="mb-4">Upload document for comparison</p>
+                  <button
+                    @click="$refs.compareFileInput.click()"
+                    class="bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Choose File
+                  </button>
+                </div>
+
+                <!-- Comparison Results -->
+                <div v-if="comparisonResults" class="mt-6">
+                  <h5 class="text-lg font-semibold mb-4">Comparison Results</h5>
+                  <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded">
+                      <h6 class="font-semibold mb-2">Original Document</h6>
+                      <p>
+                        <strong>Name:</strong> {{ "{{" }}
+                        comparisonResults.original_document.name {{ "}}" }}
+                      </p>
+                      <p>
+                        <strong>Clauses:</strong> {{ "{{" }}
+                        comparisonResults.original_document.clauses_count {{
+                        "}}" }}
+                      </p>
+                      <p>
+                        <strong>Risk Score:</strong> {{ "{{" }}
+                        comparisonResults.original_document.risk_score {{ "}}"
+                        }}/10
+                      </p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded">
+                      <h6 class="font-semibold mb-2">Comparison Document</h6>
+                      <p>
+                        <strong>Name:</strong> {{ "{{" }}
+                        comparisonResults.comparison_document.name {{ "}}" }}
+                      </p>
+                      <p>
+                        <strong>Clauses:</strong> {{ "{{" }}
+                        comparisonResults.comparison_document.clauses_count {{
+                        "}}" }}
+                      </p>
+                      <p>
+                        <strong>Risk Score:</strong> {{ "{{" }}
+                        comparisonResults.comparison_document.risk_score {{ "}}"
+                        }}/10
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 p-4 bg-blue-50 rounded">
+                    <h6 class="font-semibold mb-2">AI Analysis</h6>
+                    <div
+                      v-html="formatAnswer(comparisonResults.ai_analysis)"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Export Tab -->
+              <div v-if="activeTab === 'export'">
+                <h4 class="text-lg font-semibold mb-4">
+                  Export Analysis Report
+                </h4>
+                <p class="text-gray-600 mb-6">
+                  Generate a comprehensive report of your document analysis.
+                </p>
+
+                <div class="space-y-4">
+                  <button
+                    @click="exportReport"
+                    class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700"
+                  >
+                    <i class="fas fa-download mr-2"></i>
+                    Generate Report
+                  </button>
+
+                  <div v-if="exportedReport" class="bg-gray-50 p-4 rounded">
+                    <h5 class="font-semibold mb-2">Report Generated</h5>
+                    <p class="text-sm text-gray-600 mb-3">
+                      {{ "{{" }} exportedReport.filename {{ "}}" }}
+                    </p>
+                    <button
+                      @click="downloadReport"
+                      class="bg-blue-600 text-white px-4 py-2 rounded text-sm"
+                    >
+                      <i class="fas fa-file-download mr-2"></i>
+                      Download
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div
+          v-if="uploading"
+          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        >
+          <div class="bg-white p-8 rounded-lg text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold mb-2">Processing Your Document</h3>
+            <p class="text-gray-600">{{ "{{" }} uploadStatus {{ "}}" }}</p>
+          </div>
+        </div>
+
+        <!-- Explanation Modal -->
+        <div
+          v-if="showExplanation"
+          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          @click="showExplanation = false"
+        >
+          <div
+            class="bg-white p-6 rounded-lg max-w-2xl max-h-96 overflow-y-auto"
+            @click.stop
+          >
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">Clause Explanation</h3>
+              <button
+                @click="showExplanation = false"
+                class="text-gray-500 hover:text-gray-700"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div v-if="explanationData">
+              <div class="mb-4">
+                <span
+                  :class="getRiskBadgeClass(explanationData.risk_level)"
+                  class="px-2 py-1 rounded text-xs font-medium"
+                >
+                  {{ "{{" }} getRiskIcon(explanationData.risk_level) {{ "}}" }}
+                  {{ "{{" }} explanationData.risk_level {{ "}}" }} Risk
+                </span>
+              </div>
+              <div class="prose max-w-none mb-4">
+                <div v-html="formatAnswer(explanationData.explanation)"></div>
+              </div>
+              <div
+                v-if="explanationData.risk_factors && explanationData.risk_factors.length"
+                class="mb-4"
+              >
+                <h4 class="font-semibold mb-2">Risk Factors:</h4>
+                <ul class="list-disc list-inside text-sm">
+                  <li
+                    v-for="factor in explanationData.risk_factors"
+                    :key="factor"
+                  >
+                    {{ "{{" }} factor {{ "}}" }}
+                  </li>
+                </ul>
+              </div>
+              <div
+                v-if="explanationData.recommendations && explanationData.recommendations.length"
+              >
+                <h4 class="font-semibold mb-2">Recommendations:</h4>
+                <ul class="list-disc list-inside text-sm">
+                  <li v-for="rec in explanationData.recommendations" :key="rec">
+                    {{ "{{" }} rec {{ "}}" }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Privacy Notice -->
+        <div
+          v-if="analysisResults && analysisResults.privacy_notice"
+          class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4"
+        >
+          <h4 class="font-semibold text-blue-900 mb-2">
+            <i class="fas fa-shield-alt mr-2"></i>
+            Privacy Notice
+          </h4>
+          <p class="text-blue-800 text-sm">
+            {{ "{{" }} analysisResults.privacy_notice {{ "}}" }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Help Modal -->
+      <div
+        v-if="showHelp"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        @click="showHelp = false"
+      >
+        <div
+          class="bg-white p-6 rounded-lg max-w-2xl max-h-96 overflow-y-auto"
+          @click.stop
+        >
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">
+              How to Use Legal Document Demystifier
+            </h3>
+            <button
+              @click="showHelp = false"
+              class="text-gray-500 hover:text-gray-700"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="space-y-4 text-sm">
+            <div>
+              <h4 class="font-semibold">1. Upload Your Document</h4>
+              <p>
+                Choose a PDF legal document (max 25MB) and select your privacy
+                preference.
+              </p>
+            </div>
+            <div>
+              <h4 class="font-semibold">2. Review Risk Assessment</h4>
+              <p>
+                Get an instant overview of potential risks with our traffic
+                light system.
+              </p>
+            </div>
+            <div>
+              <h4 class="font-semibold">3. Explore Clauses</h4>
+              <p>
+                Dive deep into individual clauses with AI-powered explanations.
+              </p>
+            </div>
+            <div>
+              <h4 class="font-semibold">4. Ask Questions</h4>
+              <p>
+                Get specific answers about your document using natural language.
+              </p>
+            </div>
+            <div class="border-t pt-4">
+              <p class="text-red-600 font-semibold">
+                ⚠️ Important: This tool provides informational analysis only and
+                does not constitute legal advice. Always consult a qualified
+                attorney for legal matters.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            // App state
+            sessionId: null,
+            selectedFile: null,
+            uploading: false,
+            uploadStatus: "Initializing...",
+            privacyMode: "standard",
+            selectedLanguage: "english",
+            activeTab: "summary",
+            showHelp: false,
+            showExplanation: false,
+
+            // Data
+            analysisResults: null,
+            riskRadarData: null,
+            clauses: null,
+            currentQuestion: "",
+            qaHistory: [],
+            comparisonResults: null,
+            exportedReport: null,
+            explanationData: null,
+
+            // UI Configuration
+            features: [
+              {
+                icon: "fas fa-traffic-light",
+                title: "Risk Radar",
+                description: "Traffic light system for instant risk assessment",
+              },
+              {
+                icon: "fas fa-language",
+                title: "Multilingual",
+                description:
+                  "Support for 8+ Indian languages with storytelling",
+              },
+              {
+                icon: "fas fa-shield",
+                title: "Privacy First",
+                description: "Advanced privacy modes with secure processing",
+              },
+            ],
+            tabs: [
+              { id: "summary", name: "Summary", icon: "fas fa-file-alt" },
+              { id: "radar", name: "Risk Radar", icon: "fas fa-search" },
+              { id: "clauses", name: "Clauses", icon: "fas fa-list" },
+              { id: "qa", name: "Q&A", icon: "fas fa-question-circle" },
+              { id: "compare", name: "Compare", icon: "fas fa-exchange-alt" },
+              { id: "export", name: "Export", icon: "fas fa-download" },
+            ],
+          };
+        },
+        methods: {
+          handleFileSelect(event) {
+            this.selectedFile = event.target.files[0];
+          },
+
+          async uploadDocument() {
+            if (!this.selectedFile) return;
+
+            this.uploading = true;
+            this.uploadStatus = "Uploading file...";
+
+            const formData = new FormData();
+            formData.append("file", this.selectedFile);
+
+            const requestData = {
+              privacy_mode: this.privacyMode,
+              language: this.selectedLanguage,
+              analysis_type: "comprehensive",
+            };
+
+            // Add request data to form
+            Object.keys(requestData).forEach((key) => {
+              formData.append(key, requestData[key]);
+            });
+
+            try {
+              this.uploadStatus = "Processing document...";
+
+              const response = await axios.post("/api/upload", formData, {
+                headers: {
+                  "Content-Type": "multipart/form-data",
+                },
+              });
+
+              this.analysisResults = response.data;
+              this.sessionId = response.data.session_id;
+              this.activeTab = "summary";
+            } catch (error) {
+              console.error("Upload failed:", error);
+              alert(
+                "Upload failed: " +
+                  (error.response?.data?.detail || error.message)
+              );
+            } finally {
+              this.uploading = false;
+            }
+          },
+
+          async loadRiskRadar() {
+            try {
+              const response = await axios.get(
+                `/api/session/${this.sessionId}/risk-radar`
+              );
+              this.riskRadarData = response.data;
+            } catch (error) {
+              console.error("Failed to load risk radar:", error);
+            }
+          },
+
+          async loadClauses() {
+            try {
+              const response = await axios.get(
+                `/api/session/${this.sessionId}/clauses`
+              );
+              this.clauses = response.data.clauses;
+            } catch (error) {
+              console.error("Failed to load clauses:", error);
+            }
+          },
+
+          async explainClause(clauseId, useStorytelling = false) {
+            try {
+              const response = await axios.post(
+                `/api/session/${this.sessionId}/explain`,
+                {
+                  clause_id: clauseId,
+                  language: this.selectedLanguage,
+                  use_storytelling: useStorytelling,
+                }
+              );
+
+              this.explanationData = response.data;
+              this.showExplanation = true;
+            } catch (error) {
+              console.error("Failed to explain clause:", error);
+            }
+          },
+
+          async askQuestion() {
+            if (!this.currentQuestion.trim()) return;
+
+            try {
+              const response = await axios.post(
+                `/api/session/${this.sessionId}/question`,
+                {
+                  question: this.currentQuestion,
+                  language: this.selectedLanguage,
+                }
+              );
+
+              this.qaHistory.unshift({
+                id: Date.now(),
+                question: this.currentQuestion,
+                answer: response.data.answer,
+                sources: response.data.sources,
+              });
+
+              this.currentQuestion = "";
+            } catch (error) {
+              console.error("Failed to ask question:", error);
+            }
+          },
+
+          handleCompareFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+              this.compareDocument(file);
+            }
+          },
+
+          async compareDocument(file) {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("privacy_mode", this.privacyMode);
+
+            try {
+              const response = await axios.post(
+                `/api/session/${this.sessionId}/compare`,
+                formData,
+                {
+                  headers: {
+                    "Content-Type": "multipart/form-data",
+                  },
+                }
+              );
+
+              this.comparisonResults = response.data;
+            } catch (error) {
+              console.error("Comparison failed:", error);
+            }
+          },
+
+          async exportReport() {
+            try {
+              const response = await axios.get(
+                `/api/session/${this.sessionId}/export`
+              );
+              this.exportedReport = response.data;
+            } catch (error) {
+              console.error("Export failed:", error);
+            }
+          },
+
+          downloadReport() {
+            if (!this.exportedReport) return;
+
+            const blob = new Blob([this.exportedReport.report_content], {
+              type: "text/markdown",
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = this.exportedReport.filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          },
+
+          // Utility methods
+          formatFileSize(bytes) {
+            if (bytes === 0) return "0 Bytes";
+            const k = 1024;
+            const sizes = ["Bytes", "KB", "MB", "GB"];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return (
+              parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+            );
+          },
+
+          formatSummary(summary) {
+            if (!summary) return "";
+            return summary
+              .replace(/\n/g, "<br>")
+              .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+          },
+
+          formatAnswer(answer) {
+            if (!answer) return "";
+            return answer
+              .replace(/\n/g, "<br>")
+              .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+          },
+
+          getRiskIcon(level) {
+            const icons = {
+              RED: "🚨",
+              YELLOW: "⚠️",
+              GREEN: "✅",
+            };
+            return icons[level] || "❓";
+          },
+
+          getRiskCardClass(level) {
+            const classes = {
+              RED: "risk-red",
+              YELLOW: "risk-yellow",
+              GREEN: "risk-green",
+            };
+            return classes[level] || "bg-gray-100 border-gray-300";
+          },
+
+          getRiskBadgeClass(level) {
+            const classes = {
+              RED: "bg-red-100 text-red-800",
+              YELLOW: "bg-yellow-100 text-yellow-800",
+              GREEN: "bg-green-100 text-green-800",
+            };
+            return classes[level] || "bg-gray-100 text-gray-800";
+          },
+
+          getRiskCount(level) {
+            if (
+              !this.analysisResults ||
+              !this.analysisResults.risk_summary ||
+              !this.analysisResults.risk_summary.risk_breakdown
+            ) {
+              return 0;
+            }
+            return this.analysisResults.risk_summary.risk_breakdown[level] || 0;
+          },
+
+          getRiskScore() {
+            if (!this.analysisResults || !this.analysisResults.risk_summary) {
+              return 0;
+            }
+            return this.analysisResults.risk_summary.risk_score || 0;
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>

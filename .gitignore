@@ -54,3 +54,6 @@ docker-compose.override.yml
 # Misc
 *.db
 *.sqlite3
+
+
+.encryption_key
